@@ -13,18 +13,25 @@ import { createReadStream, existsSync } from 'fs';
 export class UsersService {
     constructor(@InjectRepository(User) private usersRepo: Repository<User>) { }
 
-    findAll() {
-        return this.usersRepo.find();
+    async findAllUsers() {
+        return await this.usersRepo.find({
+            relations: ['following', 'followers']
+        });
     }
 
-    async findByEmail(email: string): Promise<User> {
-        const user = await this.usersRepo.findOneBy({ email });
+    async getUser(email: string): Promise<UserResponseDto> {
+        const user = await this.usersRepo.findOne({
+            where: { email: email },
+            relations: ['following', 'followers']
+        });
+
         if (!user)
             throw new NotFoundException(`Utilisateur avec e-mail ${email} n'existe pas`);
 
-        return user;
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
     }
-
+    
     async create(userDto: CreateUserDto): Promise<UserResponseDto> {
         const userHashedPassword = await this.hashPassword(userDto.password);
 
@@ -47,8 +54,8 @@ export class UsersService {
                 throw new ConflictException('Email déjà utilisé');
             }
         }
-        
-        if (updateUser.password) updateUser.password = await this.hashPassword(updateUser.password); 
+
+        if (updateUser.password) updateUser.password = await this.hashPassword(updateUser.password);
 
         const user = await this.usersRepo.preload({
             id_user: userId,

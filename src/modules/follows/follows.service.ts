@@ -10,25 +10,7 @@ export class FollowsService {
         @InjectRepository(Follow) private followsRepo: Repository<Follow>,
         @InjectRepository(User) private userRepo: Repository<User>
     ) { }
-
-    async followers(userId: number): Promise<User[]> {
-        const array = await this.followsRepo.find({
-            where: { followed: { id_user: userId } },
-            relations: ['follower']
-        });
-
-        return array.map(user => user.follower);;
-    }
-
-    async followeds(userId: number): Promise<User[]> {
-        const array = await this.followsRepo.find({
-            where: { follower: { id_user: userId } },
-            relations: ['followed']
-        });
-
-        return array.map(user => user.followed);;
-    }
-
+    
     async noFolloweds(userId: number) {
         const array = await this.followsRepo.find({
             where: { follower: { id_user: userId } },

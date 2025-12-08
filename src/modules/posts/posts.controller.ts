@@ -7,13 +7,13 @@ export class PostsController {
     constructor(private postsService: PostsService) { }
 
     @Get()
-    findAllPosts() {
-        return this.postsService.findAll();
+    async findAllPosts() {
+        return await this.postsService.findAllPosts();
     }
 
     @UseGuards(AuthGuard)
     @Get(':postId')
-    findOneUser(@Param('postId') postId: string) {
+    findOnePost(@Param('postId') postId: string) {
         return this.postsService.findPostById(+postId);
     }
 

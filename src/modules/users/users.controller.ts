@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,16 +10,16 @@ export class UsersController {
 
     @UseGuards(AuthGuard)
     @Get()
-    findAllUsers() {
-        return this.usersService.findAll();
+    async findAllUsers() {
+        return await this.usersService.findAllUsers();
     }
 
     @UseGuards(AuthGuard)
-    @Get(':email')
-    findOneUser(@Param('email') email: string) {
-        return this.usersService.findByEmail(email);
+    @Get('profile')
+    async getUser(@Request() req: any): Promise<any> {
+        return await this.usersService.getUser(req.user.email);
     }
-
+    
     @Post()
     async createUser(@Body() userDto: CreateUserDto): Promise<any> {
         const user = await this.usersService.create(userDto);

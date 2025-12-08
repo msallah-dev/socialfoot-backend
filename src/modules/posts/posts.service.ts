@@ -8,10 +8,13 @@ import { Repository } from 'typeorm';
 export class PostsService {
     constructor(@InjectRepository(Post) private postsRepo: Repository<Post>) { }
 
-    findAll() {
-        return this.postsRepo.find({
-            order: { created_at: 'DESC' }
+    async findAllPosts() {
+        const posts = await this.postsRepo.find({
+            order: { created_at: 'DESC' },
+            relations: ['comments', 'likes']
         });
+
+        return posts;
     }
 
     async findPostById(postId: number): Promise<Post> {
@@ -19,7 +22,10 @@ export class PostsService {
             throw new BadRequestException('ID post invalide');
         }
 
-        const post = await this.postsRepo.findOneBy({ id_post: postId });
+        const post = await this.postsRepo.findOne({ 
+            where: { id_post: postId },
+            relations: ['comments', 'likes']
+        });
 
         if (!post)
             throw new NotFoundException(`Publication avec l'id ${postId} n'existe pas`);

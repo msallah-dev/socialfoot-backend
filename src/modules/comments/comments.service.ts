@@ -8,20 +8,7 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class CommentsService {
     constructor(@InjectRepository(Comment) private commentsRepo: Repository<Comment>) { }
-
-    async findAllCommentsByPost(postId: number): Promise<Comment[]> {
-        if (isNaN(postId)) {
-            throw new BadRequestException('ID post invalide');
-        }
-
-        const comments = await this.commentsRepo.findBy({ post: { id_post: postId } as Post });
-
-        if (!comments)
-            throw new NotFoundException(`La publication n° ${postId} n'existe pas`);
-
-        return comments;
-    }
-
+    
     async create(content: string, postId: number, userId: number) {
         const newComment = await this.commentsRepo.save({
             content,

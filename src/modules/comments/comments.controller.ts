@@ -5,13 +5,7 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 @Controller('comments')
 export class CommentsController {
     constructor(private commentsService: CommentsService) { }
-
-    @UseGuards(AuthGuard)
-    @Get(':postId')
-    findComments(@Param('postId') postId: string) {
-        return this.commentsService.findAllCommentsByPost(+postId);
-    }
-
+    
     @UseGuards(AuthGuard)
     @Post()
     async createComment(@Body('content') content: string, @Body('postId') postId: number, @Req() req: any): Promise<any> {

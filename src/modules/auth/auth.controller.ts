@@ -22,11 +22,14 @@ export class AuthController {
     }
 
     @UseGuards(AuthGuard)
-    @Get('profile')
-    async getProfile(@Request() req): Promise<any> {
-        console.log(req.user);
+    @Post('logout')
+    logout(@Headers('authorization') auth: string) {
+        const token = auth?.replace('Bearer ', '');
+        if (token) {
+            this.authService.logout(token);
+        }
 
-        return await this.authService.getProfile(req.user.email);
+        return { message: 'Déconnexion réussie' };
     }
-
+    
 }

@@ -5,14 +5,6 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 @Controller('likes')
 export class LikesController {
     constructor(private likesService: LikesService) { }
-
-    @UseGuards(AuthGuard)
-    @Get()
-    async getLikePost(@Req() req: any) {
-        const postsId = await this.likesService.getLikedPostIdsByUser(req.user.userId);
-
-        return { posts: postsId };
-    }
     
     @UseGuards(AuthGuard)
     @Post()

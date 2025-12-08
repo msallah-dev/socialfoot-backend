@@ -1,14 +1,20 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { AuthUserDto } from './dto/auth-user.dto';
 import { compare } from 'bcrypt';
-import { UsersService } from 'src/modules/users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { UserResponseDto } from 'src/modules/users/dto/response-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
 
-    constructor(private userService: UsersService, private jwtService: JwtService) { }
+    private blacklist = new Set<string>();
+
+    constructor(
+        @InjectRepository(User) private usersRepo: Repository<User>,
+        private jwtService: JwtService
+    ) { }
 
     verifyToken(token: string) {
         try {
@@ -23,8 +29,8 @@ export class AuthService {
     async login(authUserDto: AuthUserDto): Promise<any> {
         const { email, password } = authUserDto;
 
-        const existUser = await this.userService.findByEmail(email);
-        if (!existUser) throw new NotFoundException({ error: 'Mot de passe ou email invalide' });
+        const existUser = await this.usersRepo.findOneBy({ email });
+        if (!existUser) throw new NotFoundException({ error: 'E-mail invalide' });
 
         const isPasswordValid = await this.isPasswordValid(password, existUser.password);
         if (!isPasswordValid) throw new NotFoundException({ error: 'Mot de passe incorrecte' });
@@ -33,13 +39,12 @@ export class AuthService {
         return token;
     }
 
-    async getProfile(email: string): Promise<UserResponseDto> {
-        const user = await this.userService.findByEmail(email);
+    logout(token: string) {
+        this.blacklist.add(token);
+    }
 
-        if (!user) throw new NotFoundException({ error: 'Utilisateur n\'existe pas !' });
-
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+    isBlacklisted(token: string) {
+        return this.blacklist.has(token);
     }
 
     private async isPasswordValid(password: string, hashedPassword: string): Promise<boolean> {

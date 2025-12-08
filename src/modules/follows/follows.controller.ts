@@ -7,18 +7,6 @@ export class FollowsController {
     constructor(private followsService: FollowsService) { }
 
     @UseGuards(AuthGuard)
-    @Get('followers')
-    async getFollowers(@Req() req: any) {
-        return await this.followsService.followers(req.user.userId);
-    }
-
-    @UseGuards(AuthGuard)
-    @Get('followeds')
-    async getFolloweds(@Req() req: any) {
-        return await this.followsService.followeds(req.user.userId);
-    }
-
-    @UseGuards(AuthGuard)
     @Get('nofolloweds')
     async getNoFolloweds(@Req() req: any) {
         return await this.followsService.noFolloweds(req.user.userId);

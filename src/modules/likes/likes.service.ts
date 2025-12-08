@@ -8,17 +8,7 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class LikesService {
     constructor(@InjectRepository(Like) private likesRepo: Repository<Like>) { }
-
-    async getLikedPostIdsByUser(userId: number): Promise<number[]> {
-        const array = await this.likesRepo.find({
-            where: { user: { id_user: userId } }
-        });
-
-        const postsId = array.map(post => post.postId);
-
-        return postsId;
-    }
-
+    
     async create(postId: number, userId: number) {
         const existing = await this.likesRepo.findOne({
             where: {
