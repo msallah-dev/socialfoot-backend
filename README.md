@@ -1,20 +1,15 @@
 🚀 NestJS API – PostgreSQL & TypeORM
 🧱 Stack technique
 
-# Backend
-NestJS (Node.js, TypeScript)
+Backend : NestJS (Node.js, TypeScript)
 
-# Base de données
-PostgreSQL
+Base de données : PostgreSQL
 
-# ORM 
-TypeORM
+ORM : TypeORM
 
-# Authentification
-JWT
+Authentification : JWT
 
-# Validation 
-class-validator / class-transformer
+Validation : class-validator / class-transformer
 
 _____________________________
 
@@ -30,6 +25,7 @@ PostgreSQL installé et en cours d’exécution
 _____________________________
 
 ⚙️ Installation
+
 npm install
 
 _____________________________
@@ -38,36 +34,38 @@ _____________________________
 
 Créer un fichier .env à la racine du projet :
 # Application
-PORT=3000
+- PORT=3000
 
 # PostgreSQL
-DB_HOST=localhost
-DB_PORT=`votre port localhost`
-DB_USER=`votre identifiant`
-DB_PASSWORD=`votre mot de passe`
-DB_NAME=`le nom de la DB`
+- DB_HOST=localhost
+- DB_PORT=`votre port localhost`
+- DB_USER=`votre identifiant`
+- DB_PASSWORD=`votre mot de passe`
+- DB_NAME=`le nom de la DB`
 
 # JWT
-JWT_SECRET=`votre clé secrète aléatoire`
+- JWT_SECRET=`votre clé secrète aléatoire`
 
 # Client
-CLIENT_URL=`votre URL client`
+- CLIENT_URL=`votre URL client`
 
 _____________________________
 
 🚀 Démarrage du projet
+
 npm run start:dev
 
-L’API sera accessible à l’adresse
-http://localhost:PORT
+L’API sera accessible à l’adresse : http://localhost:PORT
 
 _____________________________
 
 🔁 Migrations TypeORM
 * Créer une migration
+
 npm run migration:generate -- src/migrations/CreateUserTable
 
 * Exécuter les migrations
+
 npm run migration:run
 
 _____________________________
@@ -94,6 +92,7 @@ _____________________________
 👨‍💻 Auteur
 
 SALLAH Mohamed
+
 📧 Email : sallah.mohamed@outlook.fr
 
 💼 LinkedIn : https://www.linkedin.com/in/mohamed-sallah-642151128/
