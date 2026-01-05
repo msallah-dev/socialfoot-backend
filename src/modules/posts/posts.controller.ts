@@ -1,11 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Controller('posts')
 export class PostsController {
     constructor(private postsService: PostsService) { }
 
+    @UseInterceptors(ClassSerializerInterceptor)
     @Get()
     async findAllPosts() {
         return await this.postsService.findAllPosts();
@@ -13,28 +16,36 @@ export class PostsController {
 
     @UseGuards(AuthGuard)
     @Get(':postId')
-    findOnePost(@Param('postId') postId: string) {
-        return this.postsService.findPostById(+postId);
+    async findOnePost(@Param('postId') postId: string) {
+        return await this.postsService.findPostById(+postId);
     }
 
     @UseGuards(AuthGuard)
     @Post()
-    async createPost(@Body('content') content: string, @Req() req: any): Promise<any> {
-        const post = await this.postsService.create(content, req.user.userId);
-
-        return { message: 'publication publiée avec succèes', data: post };
+    async createPost(@Body() postDto: CreatePostDto, @Req() req: any): Promise<any> {
+        return await this.postsService.create(postDto, req.user.userId);
     }
 
     @UseGuards(AuthGuard)
     @Patch(':postId')
-    updatePost(@Param('postId') postId: string, @Body('content') content: string) {
-        return this.postsService.update(+postId, content);
+    async updatePost(@Param('postId') postId: string, @Body() updatePost: UpdatePostDto) {
+        return await this.postsService.update(+postId, updatePost);
     }
 
     @UseGuards(AuthGuard)
     @Delete(':postId')
-    deletePost(@Param('postId') postId: string) {
-        return this.postsService.delete(+postId);
+    async deletePost(@Param('postId') postId: string) {
+        return await this.postsService.delete(+postId);
     }
 
+    @Get('picture/post/:postId')
+    getImageProfil(@Param('postId') postId: string) {
+        return this.postsService.getImagePost(postId);
+    }
+
+    @Delete('picture/post/:filename')
+    async deleteImage(@Param('filename') filename: string) {
+        return await this.postsService.deleteImage(filename);
+    }
+    
 }

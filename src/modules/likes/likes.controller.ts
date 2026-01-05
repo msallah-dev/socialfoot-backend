@@ -9,14 +9,12 @@ export class LikesController {
     @UseGuards(AuthGuard)
     @Post()
     async like(@Body('postId') postId: number, @Req() req: any) {
-        const like = await this.likesService.create(postId, req.user.userId);
-
-        return { message: `Vous avez liker la publication n° ${postId}` };
+        return await this.likesService.create(postId, req.user.userId);
     }
 
     @UseGuards(AuthGuard)
     @Delete(':postId')
-    dislike(@Param('postId') postId: string, @Req() req: any) {
-        return this.likesService.delete(+postId, req.user.userId);
+    async dislike(@Param('postId') postId: string, @Req() req: any) {
+        return await this.likesService.delete(+postId, req.user.userId);
     }
 }

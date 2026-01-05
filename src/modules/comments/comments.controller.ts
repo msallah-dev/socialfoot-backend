@@ -9,20 +9,18 @@ export class CommentsController {
     @UseGuards(AuthGuard)
     @Post()
     async createComment(@Body('content') content: string, @Body('postId') postId: number, @Req() req: any): Promise<any> {
-        const post = await this.commentsService.create(content, postId, req.user.userId);
-
-        return { message: 'Commentaire publiée avec succèes', data: post };
+        return await this.commentsService.create(content, postId, req.user.userId);
     }
 
     @UseGuards(AuthGuard)
     @Patch(':commentId')
-    updateComment(@Param('commentId') commentId: string, @Body('content') content: string) {
-        return this.commentsService.update(+commentId, content);
+    async updateComment(@Param('commentId') commentId: string, @Body('content') content: string) {
+        return await this.commentsService.update(+commentId, content);
     }
 
     @UseGuards(AuthGuard)
     @Delete(':commentId')
-    deleteComment(@Param('commentId') commentId: string) {
-        return this.commentsService.delete(+commentId);
+    async deleteComment(@Param('commentId') commentId: string) {
+        return await this.commentsService.delete(+commentId);
     }
 }

@@ -12,6 +12,9 @@ export class Post {
     @Column({ type: 'text', nullable: false })
     content: string;
 
+    @Column({ type: 'text', nullable: true })
+    video: string;
+
     @ManyToOne(() => User, user => user.posts, { onDelete: 'CASCADE' })
     user: User;
 

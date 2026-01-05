@@ -1,11 +1,10 @@
-import { ConflictException, Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
+import { ConflictException, HttpStatus, Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
 import { User } from '../../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hash } from 'bcrypt';
-import { UserResponseDto } from './dto/response-user.dto';
 import { join } from 'path';
 import { createReadStream, existsSync } from 'fs';
 
@@ -14,37 +13,63 @@ export class UsersService {
     constructor(@InjectRepository(User) private usersRepo: Repository<User>) { }
 
     async findAllUsers() {
-        return await this.usersRepo.find({
+        const users = await this.usersRepo.find({
             relations: ['following', 'followers']
         });
+
+        return {
+            success: true,
+            data: users,
+            status: HttpStatus.OK
+        };
     }
 
-    async getUser(email: string): Promise<UserResponseDto> {
+    async getUser(userId: number) {
         const user = await this.usersRepo.findOne({
-            where: { email: email },
-            relations: ['following', 'followers']
+            where: { id_user: userId },
+            relations: ['following.followed', 'followers.follower']
         });
 
-        if (!user)
-            throw new NotFoundException(`Utilisateur avec e-mail ${email} n'existe pas`);
+        if (!user) {
+            return {
+                success: false,
+                error: `Utilisateur avec l'id ${userId} introuvable`,
+                status: HttpStatus.NOT_FOUND
+            };
+        }
 
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        return {
+            success: true,
+            data: user,
+            status: HttpStatus.OK
+        };
     }
-    
-    async create(userDto: CreateUserDto): Promise<UserResponseDto> {
+
+    async create(userDto: CreateUserDto) {
         const userHashedPassword = await this.hashPassword(userDto.password);
 
         const existing = await this.usersRepo.findOne({ where: { email: userDto.email } });
-        if (existing) {
-            throw new ConflictException('Email déjà utilisé');
+        if (existing) return {
+            success: false,
+            errors: { email: "Email déjà utilisé" },
+            status: HttpStatus.CONFLICT
         }
 
         const newUser = this.usersRepo.create({ ...userDto, password: userHashedPassword });
         const user = await this.usersRepo.save(newUser);
+        if (!user) {
+            return {
+                success: false,
+                error: 'Problème survenu',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            };
+        }
 
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        return {
+            success: true,
+            data: user,
+            status: HttpStatus.OK
+        }
     }
 
     async update(userId: number, updateUser: UpdateUserDto) {
@@ -63,28 +88,43 @@ export class UsersService {
         });
 
         if (!user) {
-            throw new NotFoundException(`Utilisateur avec l'id ${userId} n'existe pas`);
+            return {
+                success: false,
+                error: `Utilisateur avec l'id ${userId} n'existe pas`,
+                status: HttpStatus.NOT_FOUND
+            };
         }
 
-        return await this.usersRepo.save(user);
+        const userUpdate = await this.usersRepo.save(user);
+        return {
+            success: true,
+            data: userUpdate,
+            status: HttpStatus.OK
+        }
     }
 
     async delete(userId: number) {
         const res = await this.usersRepo.delete(userId);
 
         if (res.affected === 0) {
-            throw new NotFoundException(`Utilisateur avec id ${userId} introuvable`);
+            return {
+                success: false,
+                error: `Utilisateur avec l'id ${userId} introuvable`,
+                status: HttpStatus.NOT_FOUND
+            };
         }
 
-        return `Utilisateur avec id ${userId} a été supprimé`;
+        return {
+            success: true,
+            message: `Utilisateur avec id ${userId} a été supprimé`,
+            status: HttpStatus.OK
+        };
     }
 
-    getImageProfil(userId: string): StreamableFile {
+    getImageProfil(userId: string): StreamableFile | null {
         const filePath = join(process.cwd(), 'public/uploads/profils', `${userId}.jpg`);
 
-        if (!existsSync(filePath)) {
-            throw new NotFoundException('Image non trouvée');
-        }
+        if (!existsSync(filePath)) return null;
 
         return new StreamableFile(createReadStream(filePath));
     }

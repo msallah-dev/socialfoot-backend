@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Follow } from 'src/entities/follow.entity';
 import { User } from 'src/entities/user.entity';
@@ -10,14 +10,14 @@ export class FollowsService {
         @InjectRepository(Follow) private followsRepo: Repository<Follow>,
         @InjectRepository(User) private userRepo: Repository<User>
     ) { }
-    
+
     async noFolloweds(userId: number) {
         const array = await this.followsRepo.find({
             where: { follower: { id_user: userId } },
             relations: ['followed']
         });
 
-        const followedIds = array.map(user => user.followed.id_user);
+        const followedIds = array.map((user) => user.followed.id_user);
 
         const noFolloweds = await this.userRepo.find({
             where: {
@@ -25,43 +25,68 @@ export class FollowsService {
             },
         });
 
-        return noFolloweds;
+        return {
+            success: true,
+            data: noFolloweds,
+            status: HttpStatus.OK
+        };
     }
 
-    async create(followId: number, userId: number) {
+    async create(followedId: number, userId: number) {
         const existing = await this.followsRepo.findOne({
             where: {
                 follower: { id_user: userId },
-                followed: { id_user: followId }
+                followed: { id_user: followedId }
             }
         });
 
-        if (existing) {
-            throw new ConflictException('Tu suis déjà cet utilisateur ');
-        }
+        if (existing)
+            return {
+                success: false,
+                error: "Tu suis déjà cet utilisateur",
+                status: HttpStatus.CONFLICT
+            }
 
         const follow = await this.followsRepo.save({
             follower: { id_user: userId } as User,
-            followed: { id_user: followId } as User
+            followed: { id_user: followedId } as User
         });
 
-        return follow;
+        const followdWithUser = await this.followsRepo.findOne({
+            where: { followedId: followedId },
+            relations: ['followed']
+        });
+
+        return {
+            success: true,
+            message: `Vous commencez à suivre l'utilisateur ${followedId}`,
+            data: followdWithUser,
+            status: HttpStatus.OK
+        };
     }
 
-    async delete(followId: number, userId: number) {
-        if (isNaN(followId)) {
+    async delete(followedId: number, userId: number) {
+        if (isNaN(followedId)) {
             throw new BadRequestException('ID followed invalide');
         }
 
         const res = await this.followsRepo.delete({
             follower: { id_user: userId } as User,
-            followed: { id_user: followId } as User
+            followed: { id_user: followedId } as User
         });
 
-        if (res.affected === 0) {
-            throw new NotFoundException(`Un problème est survenu`);
-        }
+        if (res.affected === 0)
+            return {
+                success: false,
+                error: "Un problème est survenu",
+                status: HttpStatus.NOT_FOUND
+            }
 
-        return { message: `Vous suivez plus l'utilisateur n°${followId}` };
+        return {
+            success: true,
+            message: `Vous suivez plus l'utilisateur n°${followedId}`,
+            data: followedId,
+            status: HttpStatus.OK
+        };
     }
 }

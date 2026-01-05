@@ -1,4 +1,5 @@
-import { IsNotEmpty, MinLength } from "class-validator";
+import { Transform } from "class-transformer";
+import { IsNotEmpty, IsOptional, MinLength } from "class-validator";
 
 
 export class CreatePostDto {
@@ -6,5 +7,7 @@ export class CreatePostDto {
     @MinLength(20, { message: 'Le texte doit contenir au moins 20 caractères.' })
     content: string;
 
-    user_id: number;
+    @IsOptional()
+    @Transform(({ value }) => value !== '' ? value : undefined)
+    video: string;
 }

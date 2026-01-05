@@ -3,6 +3,7 @@ import { Post } from './post.entity';
 import { Like } from './like.entity';
 import { Follow } from './follow.entity';
 import { Comment } from './comment.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -18,6 +19,7 @@ export class User {
     @Column()
     prenom: string;
 
+    @Exclude()
     @Column()
     password: string;
 

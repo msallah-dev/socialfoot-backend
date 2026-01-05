@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -17,14 +17,12 @@ export class UsersController {
     @UseGuards(AuthGuard)
     @Get('profile')
     async getUser(@Request() req: any): Promise<any> {
-        return await this.usersService.getUser(req.user.email);
+        return await this.usersService.getUser(req.user.userId);
     }
-    
+
     @Post()
     async createUser(@Body() userDto: CreateUserDto): Promise<any> {
-        const user = await this.usersService.create(userDto);
-
-        return { message: 'Utilisateur créé avec succès', data: user };
+        return await this.usersService.create(userDto);
     }
 
     @UseGuards(AuthGuard)
@@ -39,7 +37,6 @@ export class UsersController {
         return this.usersService.delete(+userId);
     }
 
-    @UseGuards(AuthGuard)
     @Get('picture/profil/:userId')
     getImageProfil(@Param('userId') userId: string) {
         return this.usersService.getImageProfil(userId);

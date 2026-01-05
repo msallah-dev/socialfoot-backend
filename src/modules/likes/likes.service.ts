@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like } from 'src/entities/like.entity';
 import { Post } from 'src/entities/post.entity';
@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class LikesService {
     constructor(@InjectRepository(Like) private likesRepo: Repository<Like>) { }
-    
+
     async create(postId: number, userId: number) {
         const existing = await this.likesRepo.findOne({
             where: {
@@ -26,7 +26,20 @@ export class LikesService {
             user: { id_user: userId } as User
         });
 
-        return like;
+        if (like) {
+            return {
+                success: true,
+                data: like,
+                message: `Vous avez liker la publication n° ${postId}`,
+                status: HttpStatus.OK
+            };
+        } else {
+            return {
+                success: false,
+                error: "Problème survenu",
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            };
+        }
     }
 
     async delete(postId: number, userId: number) {
@@ -40,9 +53,17 @@ export class LikesService {
         });
 
         if (res.affected === 0) {
-            throw new NotFoundException(`La publication avec id ${postId} pas liker`);
+            return {
+                success: false,
+                error: "Problème survenu",
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            };
         }
 
-        return { message: `Like de la publication n°${postId} a été enlevé` };
+        return {
+            success: true,
+            message: `La publication n°${postId} a été disliker`,
+            status: HttpStatus.OK
+        };
     }
 }

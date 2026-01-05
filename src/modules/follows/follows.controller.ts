@@ -15,9 +15,7 @@ export class FollowsController {
     @UseGuards(AuthGuard)
     @Post()
     async follow(@Body('followId') followId: number, @Req() req: any) {
-        const follow = await this.followsService.create(followId, req.user.userId);
-
-        return { message: `Vous commencez à suivre l'utilisateur ${followId}` };
+        return await this.followsService.create(followId, req.user.userId);
     }
 
     @UseGuards(AuthGuard)
