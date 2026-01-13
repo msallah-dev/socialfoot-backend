@@ -1,11 +1,16 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthUserDto } from './dto/auth-user.dto';
-import { compare } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Response } from 'express';
+import { randomBytes } from 'crypto';
+import { ForgotPassword } from 'src/entities/forgot-password.entity';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +19,9 @@ export class AuthService {
 
     constructor(
         @InjectRepository(User) private usersRepo: Repository<User>,
-        private jwtService: JwtService
+        @InjectRepository(ForgotPassword) private forgotPasswordRepository: Repository<ForgotPassword>,
+        private jwtService: JwtService,
+        private mailerService: MailerService
     ) { }
 
     verifyToken(token: string) {
@@ -37,7 +44,7 @@ export class AuthService {
             status: HttpStatus.BAD_REQUEST
         };
 
-        const isPasswordValid = await this.isPasswordValid(password, existUser.password);
+        const isPasswordValid = await this.isValid(password, existUser.password);
         if (!isPasswordValid) return {
             success: false,
             errors: { password: "Mot de passe incorrecte", email: "" },
@@ -80,7 +87,7 @@ export class AuthService {
         const existUser = await this.usersRepo.findOneBy({ email });
 
         if (existUser) {
-            const isPasswordValid = await this.isPasswordValid(password, existUser.password);
+            const isPasswordValid = await this.isValid(password, existUser.password);
             if (!isPasswordValid) {
 
                 return {
@@ -104,10 +111,114 @@ export class AuthService {
         }
     }
 
-    private async isPasswordValid(password: string, hashedPassword: string): Promise<boolean> {
-        const bool = await compare(password, hashedPassword);
+    async generateResetPasswordLink(fPDto: ForgotPasswordDto) {
+        const user = await this.usersRepo.findOneBy({ email: fPDto.email });
+        if (!user) return {
+            success: false,
+            message: "Un e‑mail de réinitialisation a été envoyé si cette adresse est enregistrée.",
+            status: HttpStatus.BAD_REQUEST
+        };
 
-        return bool;
+        const token = randomBytes(32).toString('hex');
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+        const forgotPassword = await this.forgotPasswordRepository.save({
+            token,
+            user,
+            expiresAt,
+        });
+
+        if (forgotPassword) {
+            const link = `${process.env.CLIENT_URL}/reinitialiser-mot-de-passe?token=${token}`;
+            this.sendLinkResetPassword(user.email, link);
+
+            return {
+                success: true,
+                message: "Un e‑mail de réinitialisation a été envoyé si cette adresse est enregistrée.",
+                data: link,
+                status: HttpStatus.OK
+            };
+        }
+    }
+
+    async checkToken(token: string) {
+        const forgotPassword = await this.forgotPasswordRepository.findOne({
+            where: { token },
+            relations: ['user']
+        });
+
+        if (!forgotPassword) {
+            return {
+                success: false,
+                error: "Token invalide",
+                status: HttpStatus.BAD_REQUEST
+            };
+
+        } else if (forgotPassword.expiresAt.getTime() < Date.now()) {
+            // Supprimer le token de la table 'forgot_password'
+            const res = await this.deleteToken(token);
+
+            if (res) return {
+                success: false,
+                error: "Token expiré",
+                status: HttpStatus.BAD_REQUEST
+            };
+
+        } else {
+            return {
+                success: true,
+                message: "Token valide",
+                data: forgotPassword.user,
+                status: HttpStatus.OK
+            };
+        }
+
+    }
+
+    async reset(userId: number, resetPassword: ResetPasswordDto, token: string) {
+        resetPassword.password = await this.hashPassword(resetPassword.password);
+
+        const user = await this.usersRepo.preload({
+            id_user: userId,
+            ...resetPassword
+        });
+
+        if (!user) {
+            return {
+                success: false,
+                error: "L’opération ne peut pas être effectuée pour le moment",
+                status: HttpStatus.NOT_FOUND
+            };
+        }
+
+        const userReset = await this.usersRepo.save(user);
+        const res = await this.deleteToken(token);
+
+        if (userReset && res) {
+            this.sendPasswordResetConfirmation(userReset.email);
+
+            return {
+                success: true,
+                message: "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+                data: userReset,
+                status: HttpStatus.OK
+            };
+        }
+
+        return {
+            success: false,
+            error: 'Problème survenu',
+            status: HttpStatus.INTERNAL_SERVER_ERROR
+        };
+    }
+
+    private async deleteToken(token: string) {
+        const res = await this.forgotPasswordRepository.delete({ token });
+
+        if (res.affected === 0) return false;
+
+        return true;
     }
 
     // JWT
@@ -127,4 +238,44 @@ export class AuthService {
             status: HttpStatus.OK
         };
     }
+
+    private async isValid(password: string, hashedPassword: string): Promise<boolean> {
+        return await compare(password, hashedPassword);
+    }
+
+    private async hashPassword(password: string): Promise<string> {
+        return await hash(password, 10);
+    }
+
+    private async sendLinkResetPassword(email: string, link: string) {
+        await this.mailerService.sendMail({
+            to: email,
+            subject: 'Réinitialisation de votre mot de passe',
+            html: `
+                <p>Bonjour,</p>
+                <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+                <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe sécurisé :</p>
+                <a href="${link}">Réinitialiser mon mot de passe</a>
+                <p>Ce lien est valable pour une durée de 10 minutes.</p>
+                <p>Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e‑mail en toute sécurité</p>
+                <p>Cordialement,</p>
+                <p>L’équipe SocialFoot</p>
+            `,
+        });
+    }
+
+    private async sendPasswordResetConfirmation(email: string) {
+        await this.mailerService.sendMail({
+            to: email,
+            subject: 'Votre mot de passe a été modifié',
+            html: `
+                <p>Bonjour,</p>
+                <p>Nous vous confirmons que votre mot de passe a été modifié avec succès.</p>
+                <p>Si vous n’êtes pas à l’origine de ce changement, veuillez contacter immédiatement notre support.</p>
+                <p>Cordialement,</p>
+                <p>L’équipe SocialFoot</p>
+            `,
+        });
+    }
+
 }

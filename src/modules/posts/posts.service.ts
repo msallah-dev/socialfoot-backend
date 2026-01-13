@@ -51,9 +51,9 @@ export class PostsService {
     }
 
     async create(postDto: CreatePostDto, userId: number) {
-        const post = await this.postsRepo.save({ 
-            ...postDto, 
-            user: { id_user: userId } as User 
+        const post = await this.postsRepo.save({
+            ...postDto,
+            user: { id_user: userId } as User
         });
 
         if (post) {
@@ -105,13 +105,12 @@ export class PostsService {
 
         const res = await this.postsRepo.delete(postId);
 
-        if (res.affected === 0) {
-            return {
-                success: false,
-                error: `Publication avec id ${postId} introuvable`,
-                status: HttpStatus.NOT_FOUND
-            };
-        }
+        if (res.affected === 0) return {
+            success: false,
+            error: `Publication avec id ${postId} introuvable`,
+            status: HttpStatus.NOT_FOUND
+        };
+
 
         return {
             success: true,

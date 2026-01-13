@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post, UseGuards, Res, Req, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Res, Req, Param, Patch } from '@nestjs/common';
 import { AuthUserDto } from './dto/auth-user.dto';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import type { Response } from 'express';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,6 +33,25 @@ export class AuthController {
     @Post('check-password')
     async checkPassword(@Body('email') email: string, @Body('password') password: string) {
         return await this.authService.checkPassword(email, password);
+    }
+
+    @Post('generate-link-forgot-password')
+    async forgotPassword(@Body() fPDto: ForgotPasswordDto) {
+        return await this.authService.generateResetPasswordLink(fPDto);
+    }
+
+    @Get('check-token-forgot-password/:token')
+    async checkTokenForgotPassword(@Param('token') token: string) {
+        return await this.authService.checkToken(token);
+    }
+
+    @Patch(':userId')
+    async resetPassword(
+        @Param('userId') userId: string,
+        @Body() resetPassword: ResetPasswordDto,
+        @Body('token') token: string
+    ) {
+        return await this.authService.reset(+userId, resetPassword, token);
     }
 
 }

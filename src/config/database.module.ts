@@ -11,9 +11,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
             useFactory: (config: ConfigService) => {
                 console.log('Connecting to database:', config.get('DB_NAME'));
                 return typeOrmConfig(config);
-            },
-        }),
-    ],
+            }
+        })
+    ]
 })
 
 export class DatabaseModule { }

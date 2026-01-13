@@ -4,6 +4,7 @@ import { Like } from './like.entity';
 import { Follow } from './follow.entity';
 import { Comment } from './comment.entity';
 import { Exclude } from 'class-transformer';
+import { ForgotPassword } from './forgot-password.entity';
 
 @Entity('users')
 export class User {
@@ -40,6 +41,9 @@ export class User {
 
     @OneToMany(() => Follow, follow => follow.followed)
     followers: Follow[];
+
+    @OneToMany(() => ForgotPassword, fp => fp.user)
+    forgotPasswords: ForgotPassword[]
 
     @CreateDateColumn()
     created_at: Date;
