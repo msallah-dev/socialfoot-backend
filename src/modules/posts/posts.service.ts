@@ -16,7 +16,7 @@ export class PostsService {
     async findAllPosts() {
         const posts = await this.postsRepo.find({
             order: { created_at: 'DESC' },
-            relations: ['user', 'comments.user', 'likes.user']
+            relations: ['user', 'comments.user', 'likes.user', 'shares.user']
         });
 
         if (posts) {

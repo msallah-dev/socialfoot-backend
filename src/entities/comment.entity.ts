@@ -3,7 +3,7 @@ import { Post } from "./post.entity";
 import { User } from "./user.entity";
 
 
-@Entity('Comments')
+@Entity('comments')
 export class Comment {
     @PrimaryGeneratedColumn()
     id_commentaire: number;

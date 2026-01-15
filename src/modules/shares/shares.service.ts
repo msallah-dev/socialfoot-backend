@@ -1,16 +1,16 @@
-import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like } from 'src/entities/like.entity';
+import { Share } from 'src/entities/share.entity';
 import { Post } from 'src/entities/post.entity';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class LikesService {
-    constructor(@InjectRepository(Like) private likesRepo: Repository<Like>) { }
+export class SharesService {
+    constructor(@InjectRepository(Share) private sharesRepo: Repository<Share>) { }
 
     async create(postId: number, userId: number) {
-        const existing = await this.likesRepo.findOne({
+        const existing = await this.sharesRepo.findOne({
             where: {
                 post: { id_post: postId },
                 user: { id_user: userId }
@@ -18,19 +18,19 @@ export class LikesService {
         });
 
         if (existing) {
-            throw new ConflictException('Tu as déjà liké ce poste');
+            throw new ConflictException('Tu as déjà partagé ce poste');
         }
 
-        const like = await this.likesRepo.save({
+        const share = await this.sharesRepo.save({
             post: { id_post: postId } as Post,
             user: { id_user: userId } as User
         });
 
-        if (like) {
+        if (share) {
             return {
                 success: true,
-                data: like,
-                message: `Vous avez liker la publication n° ${postId}`,
+                data: share,
+                message: `Vous avez partagé la publication n° ${postId}`,
                 status: HttpStatus.OK
             };
         } else {
@@ -47,7 +47,7 @@ export class LikesService {
             throw new BadRequestException('ID post invalide');
         }
 
-        const res = await this.likesRepo.delete({
+        const res = await this.sharesRepo.delete({
             post: { id_post: postId } as Post,
             user: { id_user: userId } as User
         });
@@ -62,8 +62,9 @@ export class LikesService {
 
         return {
             success: true,
-            message: `La publication n°${postId} a été disliker`,
+            message: `Le partage de la publication n°${postId} a été supprimé`,
             status: HttpStatus.OK
         };
     }
+
 }

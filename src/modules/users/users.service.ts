@@ -27,7 +27,14 @@ export class UsersService {
     async getUser(userId: number) {
         const user = await this.usersRepo.findOne({
             where: { id_user: userId },
-            relations: ['following.followed', 'followers.follower']
+            relations: [
+                'following.followed',
+                'followers.follower',
+                'shares.post.user',
+                'shares.post.comments.user',
+                'shares.post.likes.user',
+                'shares.post.shares.user'
+            ]
         });
 
         if (!user) {

@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGenerate
 import { User } from "./user.entity";
 import { Comment } from "./comment.entity";
 import { Like } from "./like.entity";
+import { Share } from "./share.entity";
 
 
 @Entity('posts')
@@ -23,6 +24,9 @@ export class Post {
 
     @OneToMany(() => Like, like => like.post)
     likes: Like[];
+
+    @OneToMany(() => Share, share => share.post)
+    shares: Share[]
 
     @CreateDateColumn()
     created_at: Date;

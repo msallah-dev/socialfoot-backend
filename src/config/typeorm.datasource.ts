@@ -4,6 +4,7 @@ import { User } from '../entities/user.entity';
 import { Post } from '../entities/post.entity';
 import { Comment } from '../entities/comment.entity';
 import { Like } from '../entities/like.entity';
+import { Share } from '../entities/share.entity';
 import { Follow } from '../entities/follow.entity';
 import { ForgotPassword } from '../entities/forgot-password.entity';
 
@@ -16,7 +17,7 @@ const AppDataSource = new DataSource({
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    entities: [User, Post, Comment, Like, Follow, ForgotPassword],
+    entities: [User, Post, Comment, Like, Share, Follow, ForgotPassword],
     migrations: ['src/migrations/*.ts'],
 });
 

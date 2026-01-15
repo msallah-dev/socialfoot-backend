@@ -10,6 +10,7 @@ import { PostsModule } from './modules/posts/posts.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { LikesModule } from './modules/likes/likes.module';
 import { FollowsModule } from './modules/follows/follows.module';
+import { SharesModule } from './modules/shares/shares.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { FollowsModule } from './modules/follows/follows.module';
     PostsModule,
     CommentsModule,
     LikesModule,
+    SharesModule,
     FollowsModule,
   ],
   controllers: [AppController],

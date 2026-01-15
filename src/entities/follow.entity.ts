@@ -2,7 +2,7 @@ import { CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "
 import { User } from "./user.entity";
 
 
-@Entity('Follow')
+@Entity('follow')
 export class Follow {
     @PrimaryColumn()
     followerId: number;

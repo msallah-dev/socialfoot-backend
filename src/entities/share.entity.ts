@@ -3,19 +3,19 @@ import { Post } from "./post.entity";
 import { User } from "./user.entity";
 
 
-@Entity('likes')
-export class Like {
+@Entity('shares')
+export class Share {
     @PrimaryColumn()
     userId: number;
 
     @PrimaryColumn()
     postId: number;
 
-    @ManyToOne(() => Post, post => post.likes, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Post, post => post.shares, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'postId' })
     post: Post;
 
-    @ManyToOne(() => User, user => user.likes, { onDelete: 'CASCADE' })
+    @ManyToOne(() => User, user => user.shares, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'userId' })
     user: User;
 

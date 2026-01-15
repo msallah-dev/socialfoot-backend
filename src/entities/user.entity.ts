@@ -5,6 +5,7 @@ import { Follow } from './follow.entity';
 import { Comment } from './comment.entity';
 import { Exclude } from 'class-transformer';
 import { ForgotPassword } from './forgot-password.entity';
+import { Share } from './share.entity';
 
 @Entity('users')
 export class User {
@@ -35,6 +36,9 @@ export class User {
 
     @OneToMany(() => Like, like => like.user)
     likes: Like[];
+
+    @OneToMany(() => Share, share => share.user)
+    shares: Share[]
 
     @OneToMany(() => Follow, follow => follow.follower)
     following: Follow[];
