@@ -29,11 +29,7 @@ export class UsersService {
             where: { id_user: userId },
             relations: [
                 'following.followed',
-                'followers.follower',
-                'shares.post.user',
-                'shares.post.comments.user',
-                'shares.post.likes.user',
-                'shares.post.shares.user'
+                'followers.follower'
             ]
         });
 
