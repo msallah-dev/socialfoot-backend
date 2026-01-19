@@ -136,7 +136,6 @@ export class AuthService {
             return {
                 success: true,
                 message: "Un e‑mail de réinitialisation a été envoyé si cette adresse est enregistrée.",
-                data: link,
                 status: HttpStatus.OK
             };
         }

@@ -49,6 +49,12 @@ Créer un fichier .env à la racine du projet :
 # Client
 - CLIENT_URL=`votre URL client`
 
+# Email
+- SMTP_HOST=`votre HOST SMTP`
+- SMTP_PORT=`votre port SMTP`
+- EMAIL=`votre adresse mail`
+- PASSWORD=`votre mot de passe mail`
+
 _____________________________
 
 🚀 Démarrage du projet
